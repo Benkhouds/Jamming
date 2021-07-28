@@ -1,48 +1,25 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import SearchBar from '../SearchBar/SearchBar'
 import SearchResults from '../SearchResults/SearchResults'
 import Playlist from '../Playlist/Playlist'
+import Login from '../Login/Login'
+import Spotify from '../../util/Spotify'
 import './App.css'
-
 function App() {
-  const DUMMY_DATA = [
-    {
-      id: 1,
-      title: 'Leave the door open',
-      artist: 'Bruno Mars',
-      album: 'Silc Sonic',
-    },
-    {
-      id: 2,
-      title: 'Superstition',
-      artist: 'Stevie Wonder',
-      album: 'Superstition',
-    },
-    {
-      id: 3,
-      title: "Isn't she lovely",
-      artist: 'Stevie Wonder',
-      album: 'Superstition',
-    },
-    {
-      id: 4,
-      title: 'Nocturne no 9',
-      artist: 'Chopin',
-      album: 'Nocturnes',
-    },
-  ]
+  const [isLoading, setIsLoading] = useState(false)
+  const [searchResults, setSearchResults] = useState([])
+  const [playlistName, setPlaylistName] = useState('New Playlist')
+  const [playlistTracks, setPlaylistTracks] = useState([])
+  const [accessToken, setAccessToken] = useState('')
 
-  const [isLoading, setIsLoading] = useState(true)
-  const [searchResults, setSearchResults] = useState(null)
-  const [playlistName, setPlaylistName] = useState('playlist')
-  const [playlistTracks, setPlaylistTracks] = useState([
-    { id: 5, title: 'test', artist: 'test', album: 'test' },
-  ])
   function addTrack(track) {
     if (playlistTracks.every(({ id }) => id !== track.id)) {
       setPlaylistTracks([...playlistTracks, track])
     }
   }
+  window.addEventListener('DOMContentLoaded', () => {
+    setAccessToken(Spotify.getAccessToken())
+  })
   function removeTrack(track) {
     const copy = [...playlistTracks]
     copy.splice(copy.indexOf(track), 1)
@@ -51,26 +28,30 @@ function App() {
   function updatePlaylistName(name) {
     setPlaylistName(name)
   }
-  function savePlaylist() {
-    const trackURIs = [...playlistTracks]
-    return trackURIs.map(({ id }) => id)
-  }
-  function search(term) {
-    console.log(term)
-  }
-  useEffect(() => {
-    setIsLoading(true)
-    setSearchResults(DUMMY_DATA)
-    setIsLoading(false)
-  }, [])
 
+  function search(term) {
+    setIsLoading(true)
+    Spotify.search(term).then((results) => {
+      setSearchResults(results)
+      setIsLoading(false)
+    })
+  }
+  function savePlaylist() {
+    const URIs = playlistTracks.map(({ uri }) => uri)
+    Spotify.savePlaylist(playlistName, URIs).then(() => {
+      setPlaylistName('New Playlist')
+      setPlaylistTracks([])
+      setSearchResults([])
+    })
+  }
   return (
     <div>
       <h1>
         Ja<span className="highlight">mmm</span>ing
       </h1>
       <div className="App">
-        <SearchBar onSearch={search} />
+        {accessToken ? <SearchBar onSearch={search} /> : <Login />}
+
         <div className="App-playlist">
           {isLoading ? (
             <h1>Loading...</h1>

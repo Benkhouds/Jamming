@@ -5,16 +5,18 @@ import './TrackList.css'
 export default function TrackList(props) {
   return (
     <div className="TrackList">
-      {props.data.map((song) => {
-        return (
-          <Track
-            key={song.id}
-            track={song}
-            isRemoval={props.isRemoval}
-            onAction={props.isRemoval ? props.onRemove : props.onAdd}
-          />
-        )
-      })}
+      {props.data
+        ? props.data.map((song) => {
+            return (
+              <Track
+                key={song.id}
+                track={song}
+                isRemoval={props.isRemoval}
+                onAction={props.isRemoval ? props.onRemove : props.onAdd}
+              />
+            )
+          })
+        : null}
     </div>
   )
 }
